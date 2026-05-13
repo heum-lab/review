@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(npm view *)",
+      "Bash(npm run *)",
+      "Read(//c/Users/sjc17/AppData/Local/Temp/claude/C--project-review/804d982b-c0aa-457c-a8e0-9ebd0ad4d04a/tasks/**)",
+      "Bash(curl *)",
+      "Bash(cp \"/c/Users/sjc17/OneDrive - 네오코퍼레이션/0.굿투그레이트/1_1.총무/3.BI/시안2_554_554.png\" /c/project/review/public/brand/logo-dark.png)",
+      "Bash(cp \"/c/Users/sjc17/OneDrive - 네오코퍼레이션/0.굿투그레이트/1_1.총무/3.BI/BI_투명_620_620_W.png\" /c/project/review/public/brand/logo-light.png)",
+      "Bash(grep -oE '\\(33[Bb]{2}[Ff]{2}|33bbff|bg-brand-500.{0,80}\\)')",
+      "Bash(python -c \"import sys,re; css=sys.stdin.read\\(\\); m=re.search\\(r'\\\\.bg-brand-500\\\\s*\\\\{[^}]+\\\\}', css\\); print\\(m.group\\(0\\) if m else 'NOT FOUND'\\)\")",
+      "Bash(netstat -ano)",
+      "Bash(taskkill //PID 66264 //F)",
+      "Bash(git --version)",
+      "Bash(git config *)",
+      "Bash(git ls-remote *)",
+      "Bash(git init *)",
+      "Bash(git add *)"
+    ]
+  }
+}

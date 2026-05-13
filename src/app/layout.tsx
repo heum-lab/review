@@ -1,0 +1,124 @@
+import type { Metadata } from 'next';
+import {
+  PRIMARY_KEYWORDS,
+  SITE_ALT_NAME,
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_TAGLINE,
+  SITE_URL,
+} from '@/lib/seo';
+import './globals.css';
+
+export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: `${SITE_NAME} | ${SITE_TAGLINE}`,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  keywords: [...PRIMARY_KEYWORDS],
+  applicationName: SITE_NAME,
+  generator: 'Next.js',
+  authors: [{ name: SITE_NAME }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  category: 'Marketing',
+  alternates: {
+    canonical: '/',
+  },
+  icons: {
+    icon: '/brand/logo-dark.png',
+    apple: '/brand/logo-dark.png',
+  },
+  openGraph: {
+    title: `${SITE_NAME} | ${SITE_TAGLINE}`,
+    description: SITE_DESCRIPTION,
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    type: 'website',
+    locale: 'ko_KR',
+    images: [
+      {
+        url: '/brand/logo-dark.png',
+        width: 620,
+        height: 620,
+        alt: `${SITE_NAME} 로고`,
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: `${SITE_NAME} | ${SITE_TAGLINE}`,
+    description: SITE_DESCRIPTION,
+    images: ['/brand/logo-dark.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-snippet': -1,
+      'max-image-preview': 'large',
+      'max-video-preview': -1,
+    },
+  },
+  verification: {
+    // 추후 발급 받은 코드로 채워 주세요.
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+    other: {
+      'naver-site-verification':
+        process.env.NEXT_PUBLIC_NAVER_SITE_VERIFICATION ?? '',
+    },
+  },
+};
+
+interface RootLayoutProps {
+  children: React.ReactNode;
+}
+
+const ORGANIZATION_JSONLD = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: SITE_NAME,
+  alternateName: SITE_ALT_NAME,
+  url: SITE_URL,
+  logo: `${SITE_URL}/brand/logo-dark.png`,
+  description: SITE_DESCRIPTION,
+  email: 'g2g2024@naver.com',
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: '두텁바위로 59-1, 지층 에프-12호',
+    addressLocality: '용산구',
+    addressRegion: '서울특별시',
+    addressCountry: 'KR',
+  },
+  taxID: '134-88-03195',
+};
+
+const WEBSITE_JSONLD = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: SITE_NAME,
+  alternateName: SITE_ALT_NAME,
+  url: SITE_URL,
+  inLanguage: 'ko-KR',
+  description: SITE_DESCRIPTION,
+};
+
+export default function RootLayout({ children }: RootLayoutProps): JSX.Element {
+  return (
+    <html lang="ko">
+      <body>
+        <script
+          type="application/ld+json"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify([ORGANIZATION_JSONLD, WEBSITE_JSONLD]),
+          }}
+        />
+        {children}
+      </body>
+    </html>
+  );
+}
