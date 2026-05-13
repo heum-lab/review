@@ -9,7 +9,3 @@ dist
 *.log
 .vercel
 next-env.d.ts
-data/*.json
-!data/.gitkeep
-public/uploads/*
-!public/uploads/.gitkeep
