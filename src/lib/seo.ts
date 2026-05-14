@@ -25,6 +25,6 @@ export const PRIMARY_KEYWORDS = [
 ] as const;
 
 export const SITE_DESCRIPTION =
-  '쿠팡 리뷰·스마트스토어 리뷰·가구매·상위노출까지 한 번에 운영하는 리뷰체험단 마케팅 플랫폼. 전문 매니저가 캠페인을 직접 운영해 빠르고 정확한 리뷰를 제공합니다.';
+  '쿠팡·스마트스토어 리뷰체험단·가구매·상위노출 마케팅 플랫폼. 전문 매니저가 캠페인을 운영해 빠른 리뷰를 제공합니다.';
 
-export const SITE_TAGLINE = '쿠팡·스마트스토어 리뷰체험단 / 가구매·상위노출 플랫폼';
+export const SITE_TAGLINE = '쿠팡·스마트스토어 리뷰·가구매 플랫폼';
