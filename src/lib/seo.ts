@@ -1,5 +1,5 @@
 export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://goodtogreat.co.kr';
+  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://g2greview.com';
 
 export const SITE_NAME = 'GOOD TO GREAT';
 export const SITE_ALT_NAME = '굿투그레이트';
