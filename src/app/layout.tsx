@@ -65,7 +65,9 @@ export const metadata: Metadata = {
   },
   verification: {
     // 추후 발급 받은 코드로 채워 주세요.
-    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+    google:
+      process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ??
+      'yNCpnFaESv57HZP7TpqZGR0gJzBz9uqo0ZacRwQO9e8',
     other: {
       'naver-site-verification':
         process.env.NEXT_PUBLIC_NAVER_SITE_VERIFICATION ??
