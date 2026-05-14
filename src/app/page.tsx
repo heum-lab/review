@@ -7,15 +7,15 @@ import { CampaignTypes } from '@/components/landing/CampaignTypes';
 import { Metrics } from '@/components/landing/Metrics';
 import { Pricing } from '@/components/landing/Pricing';
 import { CTA } from '@/components/landing/CTA';
-import { PRIMARY_KEYWORDS, SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE, SITE_URL } from '@/lib/seo';
+import { PRIMARY_KEYWORDS, SITE_ALT_NAME, SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE, SITE_URL } from '@/lib/seo';
 
 export const metadata: Metadata = {
-  title: `${SITE_TAGLINE} | ${SITE_NAME}`,
+  title: `${SITE_TAGLINE} | ${SITE_ALT_NAME}`,
   description: SITE_DESCRIPTION,
   keywords: [...PRIMARY_KEYWORDS],
   alternates: { canonical: '/' },
   openGraph: {
-    title: `${SITE_NAME} | ${SITE_TAGLINE}`,
+    title: `${SITE_TAGLINE} | ${SITE_ALT_NAME}`,
     description: SITE_DESCRIPTION,
     url: SITE_URL,
     type: 'website',

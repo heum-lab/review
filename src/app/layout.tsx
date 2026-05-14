@@ -12,8 +12,8 @@ import './globals.css';
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${SITE_NAME} | ${SITE_TAGLINE}`,
-    template: `%s | ${SITE_NAME}`,
+    default: `${SITE_TAGLINE} | ${SITE_ALT_NAME}`,
+    template: `%s | ${SITE_ALT_NAME}`,
   },
   description: SITE_DESCRIPTION,
   keywords: [...PRIMARY_KEYWORDS],
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     apple: '/brand/logo-dark.png',
   },
   openGraph: {
-    title: `${SITE_NAME} | ${SITE_TAGLINE}`,
+    title: `${SITE_TAGLINE} | ${SITE_ALT_NAME}`,
     description: SITE_DESCRIPTION,
     url: SITE_URL,
     siteName: SITE_NAME,
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: `${SITE_NAME} | ${SITE_TAGLINE}`,
+    title: `${SITE_TAGLINE} | ${SITE_ALT_NAME}`,
     description: SITE_DESCRIPTION,
     images: ['/brand/logo-dark.png'],
   },
