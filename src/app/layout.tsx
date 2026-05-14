@@ -25,6 +25,9 @@ export const metadata: Metadata = {
   category: 'Marketing',
   alternates: {
     canonical: '/',
+    types: {
+      'application/rss+xml': [{ url: '/rss.xml', title: `${SITE_NAME} 블로그 RSS` }],
+    },
   },
   icons: {
     icon: '/brand/logo-dark.png',
