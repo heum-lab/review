@@ -1,10 +1,9 @@
 'use server';
 
-import { promises as fs } from 'fs';
 import path from 'path';
+import { put } from '@vercel/blob';
 import { getCurrentUser } from '@/lib/auth';
 
-const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads');
 const MAX_BYTES = 5 * 1024 * 1024; // 5MB
 const ALLOWED = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 
@@ -22,12 +21,13 @@ export async function uploadImageAction(formData: FormData): Promise<UploadResul
   if (!ALLOWED.has(file.type)) return { error: 'JPG/PNG/WEBP/GIF만 업로드 가능합니다.' };
   if (file.size > MAX_BYTES) return { error: '5MB 이하의 이미지만 업로드 가능합니다.' };
 
-  await fs.mkdir(UPLOAD_DIR, { recursive: true });
-  const ext = path.extname(file.name) || '.png';
-  const safeExt = ext.toLowerCase().replace(/[^a-z0-9.]/g, '');
-  const name = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}${safeExt}`;
-  const buffer = Buffer.from(await file.arrayBuffer());
-  await fs.writeFile(path.join(UPLOAD_DIR, name), buffer);
+  const ext = path.extname(file.name).toLowerCase().replace(/[^a-z0-9.]/g, '') || '.png';
+  const pathname = `uploads/${Date.now()}-${Math.random().toString(36).slice(2, 10)}${ext}`;
 
-  return { url: `/uploads/${name}` };
+  const blob = await put(pathname, file, {
+    access: 'public',
+    contentType: file.type,
+  });
+
+  return { url: blob.url };
 }

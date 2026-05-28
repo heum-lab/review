@@ -1,10 +1,8 @@
 import 'server-only';
-import { promises as fs } from 'fs';
-import path from 'path';
+import { put, head, BlobNotFoundError } from '@vercel/blob';
 import sanitizeHtml from 'sanitize-html';
 
-const DATA_DIR = path.join(process.cwd(), 'data');
-const POSTS_FILE = path.join(DATA_DIR, 'posts.json');
+const POSTS_PATHNAME = 'posts/all.json';
 
 export interface Post {
   id: string;
@@ -16,15 +14,6 @@ export interface Post {
 }
 
 export type NewPostInput = Pick<Post, 'title' | 'content' | 'author' | 'tags'>;
-
-async function ensureStore(): Promise<void> {
-  try {
-    await fs.access(POSTS_FILE);
-  } catch {
-    await fs.mkdir(DATA_DIR, { recursive: true });
-    await fs.writeFile(POSTS_FILE, '[]', 'utf-8');
-  }
-}
 
 const SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
   allowedTags: [
@@ -67,13 +56,32 @@ function migrate(raw: Partial<Post>): Post {
   };
 }
 
+async function readAll(): Promise<Post[]> {
+  try {
+    const blob = await head(POSTS_PATHNAME);
+    const res = await fetch(blob.url, { cache: 'no-store' });
+    if (!res.ok) return [];
+    const parsed = (await res.json()) as Partial<Post>[];
+    return parsed.map(migrate);
+  } catch (err) {
+    if (err instanceof BlobNotFoundError) return [];
+    throw err;
+  }
+}
+
+async function writeAll(posts: Post[]): Promise<void> {
+  await put(POSTS_PATHNAME, JSON.stringify(posts, null, 2), {
+    access: 'public',
+    addRandomSuffix: false,
+    allowOverwrite: true,
+    contentType: 'application/json',
+    cacheControlMaxAge: 0,
+  });
+}
+
 export async function getAllPosts(): Promise<Post[]> {
-  await ensureStore();
-  const raw = await fs.readFile(POSTS_FILE, 'utf-8');
-  const parsed = JSON.parse(raw) as Partial<Post>[];
-  return parsed
-    .map(migrate)
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const posts = await readAll();
+  return posts.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 export async function getPostById(id: string): Promise<Post | null> {
@@ -82,7 +90,7 @@ export async function getPostById(id: string): Promise<Post | null> {
 }
 
 export async function createPost(input: NewPostInput): Promise<Post> {
-  const posts = await getAllPosts();
+  const posts = await readAll();
   const post: Post = {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     title: input.title.trim(),
@@ -92,14 +100,14 @@ export async function createPost(input: NewPostInput): Promise<Post> {
     createdAt: new Date().toISOString(),
   };
   posts.unshift(post);
-  await fs.writeFile(POSTS_FILE, JSON.stringify(posts, null, 2), 'utf-8');
+  await writeAll(posts);
   return post;
 }
 
 export type UpdatePostInput = Pick<Post, 'title' | 'content' | 'tags'>;
 
 export async function updatePost(id: string, input: UpdatePostInput): Promise<Post | null> {
-  const posts = await getAllPosts();
+  const posts = await readAll();
   const idx = posts.findIndex((p) => p.id === id);
   if (idx < 0) return null;
   const next: Post = {
@@ -109,14 +117,14 @@ export async function updatePost(id: string, input: UpdatePostInput): Promise<Po
     tags: input.tags.map((t) => t.trim()).filter(Boolean).slice(0, 10),
   };
   posts[idx] = next;
-  await fs.writeFile(POSTS_FILE, JSON.stringify(posts, null, 2), 'utf-8');
+  await writeAll(posts);
   return next;
 }
 
 export async function deletePost(id: string): Promise<void> {
-  const posts = await getAllPosts();
+  const posts = await readAll();
   const filtered = posts.filter((p) => p.id !== id);
-  await fs.writeFile(POSTS_FILE, JSON.stringify(filtered, null, 2), 'utf-8');
+  await writeAll(filtered);
 }
 
 export function formatDate(iso: string): string {
