@@ -59,7 +59,8 @@ function migrate(raw: Partial<Post>): Post {
 async function readAll(): Promise<Post[]> {
   try {
     const blob = await head(POSTS_PATHNAME);
-    const res = await fetch(blob.url, { cache: 'no-store' });
+    const url = `${blob.url}?t=${blob.uploadedAt.getTime()}`;
+    const res = await fetch(url, { cache: 'no-store' });
     if (!res.ok) return [];
     const parsed = (await res.json()) as Partial<Post>[];
     return parsed.map(migrate);
