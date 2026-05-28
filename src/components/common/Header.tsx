@@ -4,7 +4,8 @@ import { getCurrentUser } from '@/lib/auth';
 import { logoutAction } from '@/app/(auth)/actions';
 
 const NAV_ITEMS = [
-  { label: '프로세스', href: '/#features' },
+  { label: '쿠팡', href: '/coupang' },
+  { label: '스마트스토어', href: '/smartstore' },
   { label: '체험단 유형', href: '/#types' },
   { label: '가격', href: '/#pricing' },
   { label: '리뷰이야기', href: '/blog' },
