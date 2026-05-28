@@ -18,6 +18,12 @@ export const metadata: Metadata = {
     '쿠팡 상위노출',
     '스스 상위노출',
     '구매리뷰',
+    '가구매리뷰',
+    '리뷰대행',
+    '리뷰마케팅',
+    '체험단마케팅',
+    '쿠팡',
+    '스마트스토어',
   ],
   alternates: { canonical: '/blog' },
 };
