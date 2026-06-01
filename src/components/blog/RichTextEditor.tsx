@@ -5,6 +5,10 @@ import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import Image from '@tiptap/extension-image';
 import Placeholder from '@tiptap/extension-placeholder';
+import Table from '@tiptap/extension-table';
+import TableRow from '@tiptap/extension-table-row';
+import TableHeader from '@tiptap/extension-table-header';
+import TableCell from '@tiptap/extension-table-cell';
 import { useRef, useState } from 'react';
 import { uploadImageAction } from '@/app/blog/new/upload';
 
@@ -33,6 +37,10 @@ export function RichTextEditor({
       Image.configure({
         HTMLAttributes: { class: 'my-4 rounded-xl max-w-full h-auto' },
       }),
+      Table.configure({ resizable: true }),
+      TableRow,
+      TableHeader,
+      TableCell,
       Placeholder.configure({ placeholder }),
     ],
     content: initialHtml,
@@ -89,6 +97,16 @@ function Toolbar({ editor }: { editor: Editor }): JSX.Element {
   const pickFile = (): void => {
     fileInputRef.current?.click();
   };
+
+  const insertTable = (): void => {
+    editor
+      .chain()
+      .focus()
+      .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+      .run();
+  };
+
+  const inTable = editor.isActive('table');
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
     const file = e.target.files?.[0];
@@ -186,6 +204,56 @@ function Toolbar({ editor }: { editor: Editor }): JSX.Element {
         className="hidden"
         onChange={handleFileChange}
       />
+      <Divider />
+      <ToolButton onClick={insertTable} active={inTable} label="표 삽입">
+        ▦ 표
+      </ToolButton>
+      {inTable && (
+        <>
+          <ToolButton
+            onClick={() => editor.chain().focus().addColumnAfter().run()}
+            label="열 추가"
+          >
+            열＋
+          </ToolButton>
+          <ToolButton
+            onClick={() => editor.chain().focus().deleteColumn().run()}
+            label="열 삭제"
+          >
+            열－
+          </ToolButton>
+          <ToolButton
+            onClick={() => editor.chain().focus().addRowAfter().run()}
+            label="행 추가"
+          >
+            행＋
+          </ToolButton>
+          <ToolButton
+            onClick={() => editor.chain().focus().deleteRow().run()}
+            label="행 삭제"
+          >
+            행－
+          </ToolButton>
+          <ToolButton
+            onClick={() => editor.chain().focus().toggleHeaderRow().run()}
+            label="머리글 행"
+          >
+            머리글
+          </ToolButton>
+          <ToolButton
+            onClick={() => editor.chain().focus().mergeOrSplit().run()}
+            label="셀 병합/분할"
+          >
+            병합
+          </ToolButton>
+          <ToolButton
+            onClick={() => editor.chain().focus().deleteTable().run()}
+            label="표 삭제"
+          >
+            표 삭제
+          </ToolButton>
+        </>
+      )}
       <Divider />
       <ToolButton
         onClick={() => editor.chain().focus().undo().run()}
