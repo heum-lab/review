@@ -7,6 +7,7 @@ import {
   SITE_TAGLINE,
   SITE_URL,
 } from '@/lib/seo';
+import { KakaoConsult } from '@/components/common/KakaoConsult';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -124,6 +125,7 @@ export default function RootLayout({ children }: RootLayoutProps): JSX.Element {
           }}
         />
         {children}
+        <KakaoConsult />
       </body>
     </html>
   );
