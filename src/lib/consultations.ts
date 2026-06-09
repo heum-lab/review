@@ -1,14 +1,20 @@
 import 'server-only';
 import { put, list, head, del, BlobNotFoundError } from '@vercel/blob';
 
-// One blob per consultation. Storing every record in a single shared JSON file
-// caused lost updates: the public Blob store is eventually consistent, so a new
-// submission would read a stale snapshot, append itself, and overwrite — wiping
-// out records written moments earlier ("submitted but not in the list"). With a
-// blob per record, each submission only ever writes its own file, so concurrent
-// submissions can never clobber each other.
-const PREFIX = 'consultations/items/';
-const pathFor = (id: string): string => `${PREFIX}${id}.json`;
+// Storage layout on the (eventually consistent) public Blob store:
+//   consultations/items/<id>.json   — one immutable record per consultation
+//   consultations/handled/<id>      — marker blob; its EXISTENCE means "handled"
+//
+// Status is intentionally NOT stored by overwriting the record's JSON. The
+// public store takes ~5s to make an overwritten blob's CONTENT readable, so
+// toggling status that way showed stale data right after a refresh. By contrast
+// `list()` reflects blob creation/deletion almost immediately (<1s), so we model
+// the handled flag as a marker blob and derive status from a `list()` of the
+// handled/ prefix — giving near-instant read-after-write for the admin toggle.
+const ITEMS = 'consultations/items/';
+const HANDLED = 'consultations/handled/';
+const itemPath = (id: string): string => `${ITEMS}${id}.json`;
+const handledPath = (id: string): string => `${HANDLED}${id}`;
 
 export type ConsultationStatus = 'pending' | 'handled';
 
@@ -26,7 +32,7 @@ export interface Consultation {
 
 export type NewConsultationInput = Pick<Consultation, 'brand' | 'name' | 'phone' | 'email' | 'message'>;
 
-const PUT_OPTS = {
+const JSON_PUT_OPTS = {
   access: 'public',
   addRandomSuffix: false,
   allowOverwrite: true,
@@ -34,9 +40,16 @@ const PUT_OPTS = {
   cacheControlMaxAge: 0,
 } as const;
 
-// Fetch a blob's JSON via downloadUrl (bypasses the CDN edge cache that the
-// public `url` is subject to) with a unique nonce, so reads are fresh.
-async function fetchJson(downloadUrl: string): Promise<Consultation | null> {
+const MARKER_PUT_OPTS = {
+  access: 'public',
+  addRandomSuffix: false,
+  allowOverwrite: true,
+  contentType: 'text/plain',
+  cacheControlMaxAge: 0,
+} as const;
+
+// Fetch a record's JSON via downloadUrl (bypasses the CDN edge cache) + nonce.
+async function fetchRecord(downloadUrl: string): Promise<Consultation | null> {
   const sep = downloadUrl.includes('?') ? '&' : '?';
   const res = await fetch(`${downloadUrl}${sep}t=${Date.now()}-${Math.random().toString(36).slice(2)}`, {
     cache: 'no-store',
@@ -45,18 +58,38 @@ async function fetchJson(downloadUrl: string): Promise<Consultation | null> {
   return (await res.json()) as Consultation;
 }
 
+// id -> handledAt (ISO), built from the handled/ marker blobs via list().
+async function handledMap(): Promise<Map<string, string>> {
+  const { blobs } = await list({ prefix: HANDLED });
+  const m = new Map<string, string>();
+  for (const b of blobs) {
+    m.set(b.pathname.slice(HANDLED.length), b.uploadedAt.toISOString());
+  }
+  return m;
+}
+
+function withStatus(c: Consultation, handled: Map<string, string>): Consultation {
+  const handledAt = handled.get(c.id);
+  return handledAt
+    ? { ...c, status: 'handled', handledAt }
+    : { ...c, status: 'pending', handledAt: undefined };
+}
+
 export async function getAllConsultations(): Promise<Consultation[]> {
-  const { blobs } = await list({ prefix: PREFIX });
-  const items = await Promise.all(blobs.map((b) => fetchJson(b.downloadUrl)));
-  return items
+  const [itemsList, handled] = await Promise.all([list({ prefix: ITEMS }), handledMap()]);
+  const records = await Promise.all(itemsList.blobs.map((b) => fetchRecord(b.downloadUrl)));
+  return records
     .filter((c): c is Consultation => c !== null)
+    .map((c) => withStatus(c, handled))
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 export async function getConsultationById(id: string): Promise<Consultation | null> {
   try {
-    const blob = await head(pathFor(id));
-    return await fetchJson(blob.downloadUrl);
+    const blob = await head(itemPath(id));
+    const record = await fetchRecord(blob.downloadUrl);
+    if (!record) return null;
+    return withStatus(record, await handledMap());
   } catch (err) {
     if (err instanceof BlobNotFoundError) return null;
     throw err;
@@ -74,27 +107,31 @@ export async function createConsultation(input: NewConsultationInput): Promise<C
     status: 'pending',
     createdAt: new Date().toISOString(),
   };
-  await put(pathFor(item.id), JSON.stringify(item), PUT_OPTS);
+  await put(itemPath(item.id), JSON.stringify(item), JSON_PUT_OPTS);
   return item;
 }
 
 export async function setConsultationStatus(id: string, status: ConsultationStatus): Promise<void> {
-  const item = await getConsultationById(id);
-  if (!item) return;
-  const next: Consultation = {
-    ...item,
-    status,
-    handledAt: status === 'handled' ? new Date().toISOString() : undefined,
-  };
-  await put(pathFor(id), JSON.stringify(next), PUT_OPTS);
+  if (status === 'handled') {
+    await put(handledPath(id), '1', MARKER_PUT_OPTS);
+  } else {
+    try {
+      await del(handledPath(id));
+    } catch (err) {
+      if (!(err instanceof BlobNotFoundError)) throw err;
+    }
+  }
 }
 
 export async function deleteConsultation(id: string): Promise<void> {
-  try {
-    await del(pathFor(id));
-  } catch (err) {
-    if (!(err instanceof BlobNotFoundError)) throw err;
-  }
+  await Promise.all([
+    del(itemPath(id)).catch((e) => {
+      if (!(e instanceof BlobNotFoundError)) throw e;
+    }),
+    del(handledPath(id)).catch((e) => {
+      if (!(e instanceof BlobNotFoundError)) throw e;
+    }),
+  ]);
 }
 
 export function formatDate(iso: string): string {
