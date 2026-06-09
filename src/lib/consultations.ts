@@ -22,7 +22,11 @@ export type NewConsultationInput = Pick<Consultation, 'brand' | 'name' | 'phone'
 async function readAll(): Promise<Consultation[]> {
   try {
     const blob = await head(CONSULTATIONS_PATHNAME);
-    const url = `${blob.url}?t=${blob.uploadedAt.getTime()}`;
+    // Unique per-read cache-buster. uploadedAt is only second-granular, so a
+    // read→write→read within the same second would otherwise reuse the same
+    // URL key and hit a stale CDN cache (the admin status toggle needing a
+    // refresh / double-click). A fresh nonce forces an origin read each time.
+    const url = `${blob.url}?t=${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const res = await fetch(url, { cache: 'no-store' });
     if (!res.ok) return [];
     const parsed = (await res.json()) as Consultation[];
