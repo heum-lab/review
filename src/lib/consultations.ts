@@ -1,5 +1,5 @@
 import 'server-only';
-import { put, get } from '@vercel/blob';
+import { put, get, BlobNotFoundError } from '@vercel/blob';
 
 // Consultations contain PII (phone, email), so the blob is stored with
 // private access. Reads go through the authenticated `get` API.
@@ -22,13 +22,19 @@ export interface Consultation {
 export type NewConsultationInput = Pick<Consultation, 'brand' | 'name' | 'phone' | 'email' | 'message'>;
 
 async function readAll(): Promise<Consultation[]> {
-  const result = await get(CONSULTATIONS_PATHNAME, {
-    access: 'private',
-    useCache: false,
-  });
-  if (!result || result.statusCode !== 200) return [];
-  const parsed = (await new Response(result.stream).json()) as Consultation[];
-  return Array.isArray(parsed) ? parsed : [];
+  try {
+    const result = await get(CONSULTATIONS_PATHNAME, {
+      access: 'private',
+      useCache: false,
+    });
+    if (!result || result.statusCode !== 200) return [];
+    const parsed = (await new Response(result.stream).json()) as Consultation[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    // No consultations stored yet — the blob hasn't been created.
+    if (err instanceof BlobNotFoundError) return [];
+    throw err;
+  }
 }
 
 async function writeAll(items: Consultation[]): Promise<void> {
