@@ -19,6 +19,20 @@ export async function toggleHandledAction(formData: FormData): Promise<void> {
   revalidatePath(`/admin/consultations/${id}`);
 }
 
+// Argument form for client-driven optimistic UI. The public Blob store is
+// eventually consistent (a write takes a few hundred ms to propagate), so an
+// immediate re-read after writing returns stale data. The client flips the
+// status optimistically; this action just persists it in the background.
+export async function setConsultationStatusById(
+  id: string,
+  status: 'pending' | 'handled',
+): Promise<void> {
+  await requireAdmin();
+  await setConsultationStatus(id, status);
+  revalidatePath('/admin/consultations');
+  revalidatePath(`/admin/consultations/${id}`);
+}
+
 export async function deleteConsultationAction(formData: FormData): Promise<void> {
   await requireAdmin();
   const id = String(formData.get('id') ?? '');

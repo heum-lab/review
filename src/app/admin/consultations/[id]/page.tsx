@@ -5,7 +5,12 @@ import { Header } from '@/components/common/Header';
 import { Footer } from '@/components/common/Footer';
 import { getCurrentUser } from '@/lib/auth';
 import { getConsultationById, formatDate } from '@/lib/consultations';
-import { toggleHandledAction, deleteConsultationAction } from '../../actions';
+import { deleteConsultationAction } from '../../actions';
+import {
+  StatusProvider,
+  StatusBadge,
+  ToggleButton,
+} from '@/components/admin/consultation-status';
 
 interface PageProps {
   params: { id: string };
@@ -30,6 +35,7 @@ export default async function ConsultationDetailPage({ params }: PageProps): Pro
       <main className="bg-ink-100/30">
         <div className="container-x py-14 sm:py-16">
           <div className="mx-auto max-w-3xl">
+           <StatusProvider id={item.id} initial={item.status}>
             <div className="flex items-center gap-3 text-sm text-ink-500">
               <Link href="/admin/consultations" className="hover:text-ink-900">
                 상담 신청 목록
@@ -40,7 +46,7 @@ export default async function ConsultationDetailPage({ params }: PageProps): Pro
 
             <div className="mt-4 flex items-end justify-between gap-4">
               <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">{item.brand}</h1>
-              <StatusBadge status={item.status} />
+              <StatusBadge size="md" />
             </div>
 
             <div className="mt-8 rounded-2xl border border-ink-100 bg-white p-8 shadow-card">
@@ -73,20 +79,10 @@ export default async function ConsultationDetailPage({ params }: PageProps): Pro
               </Link>
 
               <div className="flex gap-2">
-                <form action={toggleHandledAction}>
-                  <input type="hidden" name="id" value={item.id} />
-                  <input
-                    type="hidden"
-                    name="status"
-                    value={item.status === 'pending' ? 'handled' : 'pending'}
-                  />
-                  <button
-                    type="submit"
-                    className="inline-flex h-11 items-center justify-center rounded-xl bg-brand-500 px-5 text-sm font-semibold text-white hover:bg-brand-600"
-                  >
-                    {item.status === 'pending' ? '처리 완료로 변경' : '미처리로 변경'}
-                  </button>
-                </form>
+                <ToggleButton
+                  variant="detail"
+                  className="inline-flex h-11 items-center justify-center rounded-xl bg-brand-500 px-5 text-sm font-semibold text-white hover:bg-brand-600"
+                />
                 <form action={deleteConsultationAction}>
                   <input type="hidden" name="id" value={item.id} />
                   <button
@@ -98,6 +94,7 @@ export default async function ConsultationDetailPage({ params }: PageProps): Pro
                 </form>
               </div>
             </div>
+           </StatusProvider>
           </div>
         </div>
       </main>
@@ -125,19 +122,4 @@ function Item({ label, value, copy }: { label: string; value: string; copy?: boo
 
 function isEmail(v: string): boolean {
   return v.includes('@');
-}
-
-function StatusBadge({ status }: { status: 'pending' | 'handled' }): JSX.Element {
-  if (status === 'handled') {
-    return (
-      <span className="inline-flex items-center rounded-full bg-ink-100 px-3 py-1 text-xs font-semibold text-ink-700">
-        처리완료
-      </span>
-    );
-  }
-  return (
-    <span className="inline-flex items-center rounded-full bg-[#D14F3A]/10 px-3 py-1 text-xs font-semibold text-[#D14F3A]">
-      미처리
-    </span>
-  );
 }
