@@ -1,9 +1,9 @@
 import 'server-only';
-import { promises as fs } from 'fs';
-import path from 'path';
+import { put, get } from '@vercel/blob';
 
-const DATA_DIR = path.join(process.cwd(), 'data');
-const FILE = path.join(DATA_DIR, 'consultations.json');
+// Consultations contain PII (phone, email), so the blob is stored with
+// private access. Reads go through the authenticated `get` API.
+const CONSULTATIONS_PATHNAME = 'consultations/all.json';
 
 export type ConsultationStatus = 'pending' | 'handled';
 
@@ -21,23 +21,24 @@ export interface Consultation {
 
 export type NewConsultationInput = Pick<Consultation, 'brand' | 'name' | 'phone' | 'email' | 'message'>;
 
-async function ensureStore(): Promise<void> {
-  try {
-    await fs.access(FILE);
-  } catch {
-    await fs.mkdir(DATA_DIR, { recursive: true });
-    await fs.writeFile(FILE, '[]', 'utf-8');
-  }
-}
-
 async function readAll(): Promise<Consultation[]> {
-  await ensureStore();
-  const raw = await fs.readFile(FILE, 'utf-8');
-  return JSON.parse(raw) as Consultation[];
+  const result = await get(CONSULTATIONS_PATHNAME, {
+    access: 'private',
+    useCache: false,
+  });
+  if (!result || result.statusCode !== 200) return [];
+  const parsed = (await new Response(result.stream).json()) as Consultation[];
+  return Array.isArray(parsed) ? parsed : [];
 }
 
 async function writeAll(items: Consultation[]): Promise<void> {
-  await fs.writeFile(FILE, JSON.stringify(items, null, 2), 'utf-8');
+  await put(CONSULTATIONS_PATHNAME, JSON.stringify(items, null, 2), {
+    access: 'private',
+    addRandomSuffix: false,
+    allowOverwrite: true,
+    contentType: 'application/json',
+    cacheControlMaxAge: 0,
+  });
 }
 
 export async function getAllConsultations(): Promise<Consultation[]> {
