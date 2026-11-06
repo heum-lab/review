@@ -132,15 +132,7 @@ export async function deletePost(id: string): Promise<void> {
   await writeAll(filtered);
 }
 
-export function formatDate(iso: string): string {
-  const d = new Date(iso);
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  const hh = String(d.getHours()).padStart(2, '0');
-  const mi = String(d.getMinutes()).padStart(2, '0');
-  return `${yyyy}.${mm}.${dd} ${hh}:${mi}`;
-}
+export { formatDate } from './date';
 
 export function extractPlainText(html: string, limit = 160): string {
   const text = sanitizeHtml(html, { allowedTags: [], allowedAttributes: {} })
