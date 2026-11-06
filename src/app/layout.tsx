@@ -95,9 +95,9 @@ const ORGANIZATION_JSONLD = {
   email: 'g2g2024@naver.com',
   address: {
     '@type': 'PostalAddress',
-    streetAddress: '두텁바위로 59-1, 지층 에프-12호',
-    addressLocality: '용산구',
-    addressRegion: '서울특별시',
+    streetAddress: '남동대로 353 JK루체스타 332-1호',
+    addressLocality: '남동구',
+    addressRegion: '인천광역시',
     addressCountry: 'KR',
   },
   taxID: '134-88-03195',

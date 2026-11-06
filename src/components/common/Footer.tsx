@@ -44,9 +44,9 @@ export function Footer(): JSX.Element {
           <div>
             사업자등록번호 134-88-03195
             <span className="mx-2 text-white/20">|</span>
-            주소 서울특별시 용산구 두텁바위로 59-1, 지층 에프-12호
+            주소 인천광역시 남동구 남동대로 353 JK루체스타 332-1호
             <span className="mx-2 text-white/20">|</span>
-            통신판매번호 2024-서울용산-1282
+            통신판매번호 2026-인천남동구-1772호
           </div>
           <div>© {new Date().getFullYear()} Good to Great. All rights reserved.</div>
         </div>
